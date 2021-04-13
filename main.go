@@ -27,15 +27,16 @@ var (
 
 func main() {
 	var (
-		port = flag.Int("p", 8080, "Listen port")
-		c    = &client{}
+		accessKey = flag.String("k", "", "Access key")
+		port      = flag.Int("p", 8080, "Listen port")
+		c         = &client{}
 	)
 	flag.Parse()
 	if err := c.connect(); err != nil {
 		log.Fatal(err)
 	}
 	go c.binanceLoop()
-	go fxLoop()
+	go fxLoop(*accessKey)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 		currencyVal, ok := query["currency"]
@@ -55,6 +56,7 @@ func main() {
 		defer mutex.Unlock()
 		if currency != "USD" {
 			amount /= fxRates[currency]
+			amount *= fxRates["USD"]
 		}
 		fmt.Fprint(w, amount/rate)
 	})
@@ -86,9 +88,9 @@ func (c *client) binanceLoop() {
 	}
 }
 
-func fxLoop() {
-	for ; ; time.Sleep(10 * time.Second) {
-		resp, err := http.Get("https://api.exchangeratesapi.io/latest?base=USD")
+func fxLoop(accessKey string) {
+	for ; ; time.Sleep(time.Hour) {
+		resp, err := http.Get("http://api.exchangeratesapi.io/v1/latest?access_key=" + accessKey)
 		if err != nil {
 			continue
 		}
