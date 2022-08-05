@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	symbol = "nanousdt"
+	symbol = "xnousdt"
 	url    = "wss://stream.binance.com:9443/ws/" + symbol + "@miniTicker"
 )
 
